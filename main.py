@@ -4,13 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 
-# API Кілтін алу
+# API Кілтін баптау
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
-
-# ПРОБЛЕМАНЫ ШЕШЕТІН ЖОЛ: 
-# Модель атауын нақты v1 нұсқасы үшін gemini-1.5-flash деп жазамыз
-model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = FastAPI()
 
@@ -22,6 +18,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# МОДЕЛЬДІ АВТОМАТТЫ ТАҢДАУ ФУНКЦИЯСЫ
+def get_working_model():
+    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    # Бірінші flash-ті тексеру, болмаса тізімдегі біріншісін алу
+    for model_name in available_models:
+        if 'gemini-1.5-flash' in model_name:
+            return genai.GenerativeModel(model_name)
+    return genai.GenerativeModel(available_models[0])
+
+# Жұмыс істеп тұрған модельді бірден іске қосамыз
+chat_model = get_working_model()
+
 class ChatMessage(BaseModel):
     username: str
     message: str
@@ -29,24 +37,19 @@ class ChatMessage(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Server is working"}
+    return {"status": "Active", "model": chat_model.model_name}
 
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        # Сұранысты жіберу
-        response = model.generate_content(f"Сен {msg.subject} мұғалімісің. Оқушы аты: {msg.username}. Жауапты қазақша бер: {msg.message}")
+        prompt = f"Сен {msg.subject} мұғалімісің. Оқушы аты: {msg.username}. Қазақша жауап бер: {msg.message}"
+        response = chat_model.generate_content(prompt)
         return {"reply": response.text}
     except Exception as e:
-        # Егер 1.5 нұсқасы әлі де істемесе, автоматты түрде gemini-pro-ға ауысу
-        try:
-            old_model = genai.GenerativeModel('gemini-pro')
-            response = old_model.generate_content(f"Сен {msg.subject} мұғалімісің. Сұрақ: {msg.message}")
-            return {"reply": response.text}
-        except Exception as e2:
-            return {"reply": f"Қате: {str(e2)}"}
+        return {"reply": f"Жүйелік қате: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
