@@ -4,12 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 
-# API Кілтін орта айнымалысынан аламыз
+# API Кілті
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# МЫНА ЖЕРДІ ӨЗГЕРТТІК: Ең сенімді модель атауы
-model = genai.GenerativeModel('gemini-1.5-flash')
+# МОДЕЛЬ АТАУЫН ОСЫЛАЙ ЖАЗ (бұл ең тұрақтысы)
+model = genai.GenerativeModel('gemini-pro')
 
 app = FastAPI()
 
@@ -29,7 +29,7 @@ class ChatMessage(BaseModel):
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        prompt = f"Сен {msg.subject} пәнінің мұғалімісің. Оқушы аты: {msg.username}. Сұрақ: {msg.message}"
+        prompt = f"Сен {msg.subject} мұғалімісің. Оқушы: {msg.username}. Сұрақ: {msg.message}"
         response = model.generate_content(prompt)
         return {"reply": response.text}
     except Exception as e:
@@ -39,3 +39,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
