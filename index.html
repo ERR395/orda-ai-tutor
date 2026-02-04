@@ -3,109 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORDA AI Tutor</title>
+    <title>ORDA AI Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
     <style>
         :root { --orda-green: #004d33; --orda-gold: #c5a059; }
-        .CodeMirror { height: 450px; border-radius: 0 0 8px 8px; font-size: 16px; }
         .bg-orda { background-color: var(--orda-green); }
         .text-orda-gold { color: var(--orda-gold); }
-        .border-orda-gold { border-color: var(--orda-gold); }
-        #chat-box::-webkit-scrollbar { width: 4px; }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--orda-gold); }
+        .CodeMirror { height: 100%; font-size: 16px; }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col overflow-hidden font-sans">
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+
+    <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl border-4 border-orda-gold w-96 text-center">
+            <div class="bg-orda text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold border-4 border-orda-gold mb-4">O</div>
+            <h2 class="text-2xl font-bold mb-4 text-orda">Қош келдіңіз!</h2>
+            <input type="text" id="user-name" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-4 outline-none focus:border-orda" placeholder="Есіміңізді жазыңыз...">
+            <select id="subject-select" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-6 outline-none focus:border-orda">
+                <option value="Python">Python</option>
+                <option value="HTML/CSS">HTML/CSS</option>
+                <option value="C++">C++</option>
+                <option value="JavaScript">JavaScript</option>
+            </select>
+            <button onclick="startApp()" class="w-full bg-orda text-white py-3 rounded-xl font-bold hover:opacity-90">Оқуды бастау</button>
+        </div>
+    </div>
 
     <header class="bg-orda text-white p-3 flex justify-between items-center border-b-4 border-orda-gold shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="bg-white p-1 rounded-full w-10 h-10 flex items-center justify-center font-bold text-orda text-xl border-2 border-orda-gold">O</div>
-            <div>
-                <h1 class="text-lg font-bold leading-none text-orda-gold">ORDA</h1>
-                <p class="text-[10px] uppercase tracking-widest">Жоғары колледжі</p>
-            </div>
+            <div class="bg-white text-orda font-bold w-8 h-8 rounded-full flex items-center justify-center">O</div>
+            <h1 class="text-lg font-bold">ORDA <span class="text-orda-gold" id="current-subject-title">AI</span></h1>
         </div>
-        <div class="text-sm font-medium italic">AI Python Tutor</div>
+        <div class="text-sm font-medium" id="welcome-text">Сәлем!</div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
         <div class="w-1/3 flex flex-col border-r border-gray-300 bg-white">
-            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <div class="bg-gray-100 border-l-4 border-orda-gold p-3 rounded text-sm text-gray-700">
-                    <b>Мұғалім:</b> Сәлем! Мен Орда колледжінің AI көмекшісімін. Python-нан қандай сұрағың бар?
-                </div>
-            </div>
-            <div class="p-3 border-t border-gray-200">
-                <div class="flex gap-2">
-                    <input type="text" id="user-input" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-orda" placeholder="Сұрақ қою...">
-                    <button onclick="sendMessage()" class="bg-orda text-white px-4 py-2 rounded-lg hover:opacity-90 transition font-bold">></button>
-                </div>
+            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+            <div class="p-3 border-t border-gray-200 flex gap-2">
+                <input type="text" id="user-input" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-orda" placeholder="Сұрақ қою...">
+                <button onclick="sendMessage()" class="bg-orda text-white px-4 py-2 rounded-lg hover:opacity-90 font-bold">></button>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-gray-200">
             <div class="p-2 bg-gray-800 text-white text-xs flex justify-between items-center">
-                <span class="text-orda-gold font-bold">EDITOR: main.py</span>
-                <button onclick="runCode()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded">Іске қосу</button>
-            </div>
-            <div class="flex-1">
-                <textarea id="code-editor"># Кодты осы жерге жаз
-print("Сәлем, Орда!")</textarea>
-            </div>
-            <div class="h-1/4 bg-black p-4 font-mono text-xs overflow-y-auto">
-                <div class="text-gray-500 mb-1">КОНСОЛЬ:</div>
-                <pre id="output" class="text-green-500"></pre>
-            </div>
-        </div>
-    </div>
+                <span class="text-orda-gold font-bold italic uppercase" id="editor-label">Editor</span>
+                <button onclick="runCode()" class="bg-green-600 px-4 py-1 rounded hover:bg-green
 
-    <script>
-        var editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
-            mode: "python",
-            theme: "default",
-            lineNumbers: true,
-            indentUnit: 4
-        });
-
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value;
-            if (!text) return;
-
-            appendMessage('Сіз', text, 'bg-blue-50 text-blue-900 border-blue-200');
-            input.value = '';
-
-            try {
-                const response = await fetch('https://orda-ai-tutor.onrender.com/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: "Оқушы", message: text, subject: "Python" })
-                });
-                const data = await response.json();
-                appendMessage('Мұғалім', data.reply, 'bg-gray-100 border-orda-gold border-l-4 text-gray-800');
-            } catch (err) {
-                appendMessage('Қате', 'Сервермен байланыс үзілді', 'bg-red-50 text-red-700');
-            }
-        }
-
-        function appendMessage(sender, text, style) {
-            const chatBox = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = `${style} p-3 rounded shadow-sm text-sm`;
-            div.innerHTML = `<b>${sender}:</b> ${text}`;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function runCode() {
-            const output = document.getElementById('output');
-            output.innerText = ">>> Программа орындалуда...\n" + editor.getValue() + "\n\n>>> Дайын.";
-        }
-        
-        document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    </script>
-</body>
-</html>
