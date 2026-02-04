@@ -1,32 +1,19 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 import google.generativeai as genai
 
-# Деректер қорын бір файлға жинау
-DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+# 1. API Кілтін баптау
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+genai.configure(api_key=GOOGLE_API_KEY)
 
-class Student(Base):
-    __tablename__ = "students"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-
-Base.metadata.create_all(bind=engine)
-
-# AI Баптау
-genai.configure(api_key="AIzaSyDvvGGXG_43z6dXiagkyJ7Vx2pQPWg5sfI")
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 2. Модельді нақтылау (Логтағы қатені түзету үшін 'gemini-1.5-flash-latest' қолданамыз)
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 app = FastAPI()
 
-# CORS баптау (Бұл өте маңызды!)
+# 3. CORS баптаулары (Браузерден қосылу үшін)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,11 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db = SessionLocal()
-    try: yield db
-    finally: db.close()
-
 class ChatMessage(BaseModel):
     username: str
     message: str
@@ -47,15 +29,25 @@ class ChatMessage(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Online", "message": "Orda AI Server is running!"}
+    return {"status": "Online", "message": "Orda AI Tutor Server is running"}
 
 @app.get("/study/{username}")
-def study(username: str, subject: str = "python"):
-    prompt = f"Сен IT мұғалімісің. Қазақша жауап бер. {subject} тілі туралы қысқаша мәлімет беріп, бір тапсырма бер."
-    response = model.generate_content(prompt)
-    return {"message": response.text}
+def start_study(username: str, subject: str):
+    return {
+        "message": f"Сәлем, {username}! Мен сенің {subject} бойынша мұғаліміңмін. Неден бастаймыз?"
+    }
 
 @app.post("/chat")
-def chat(msg: ChatMessage):
-    response = model.generate_content(msg.message)
-    return {"reply": response.text}
+async def chat(msg: ChatMessage):
+    try:
+        # AI-ға сұраныс жіберу
+        prompt = f"Сен {msg.subject} пәнінің мұғалімісің. Оқушының аты {msg.username}. Сұрақ: {msg.message}"
+        response = model.generate_content(prompt)
+        return {"reply": response.text}
+    except Exception as e:
+        return {"reply": f"Кешіріңіз, қате шықты: {str(e)}"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
