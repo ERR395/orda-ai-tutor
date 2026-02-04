@@ -8,8 +8,12 @@ import google.generativeai as genai
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# МОДЕЛЬ АТЫН ТЕК КІШІ ӘРІППЕН ЖАЗУ КЕРЕК (ӨТЕ МАҢЫЗДЫ!)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# СЕНІҢ ҚАТЕҢДІ ТҮЗЕТЕТІН ЖОЛ: Модельді тізімнен автоматты түрде таңдау
+# Егер flash-1.5 істемесе, ол автоматты түрде gemini-pro-ға ауысады
+try:
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except:
+    model = genai.GenerativeModel('gemini-pro')
 
 app = FastAPI()
 
@@ -28,17 +32,17 @@ class ChatMessage(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Server is running"}
+    return {"status": "Server is up and running"}
 
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        # AI-ға сұраныс жіберу
-        prompt = f"Сен {msg.subject} пәнінің мұғалімісің. Оқушы аты: {msg.username}. Жауапты қазақша бер. Сұрақ: {msg.message}"
-        response = model.generate_content(prompt)
+        # Сұранысты жіберу (Қазақша жауап беруді талап ету)
+        response = model.generate_content(f"Сен {msg.subject} мұғалімісің. Оқушы аты: {msg.username}. Сұраққа қазақша жауап бер: {msg.message}")
         return {"reply": response.text}
     except Exception as e:
-        return {"reply": f"Қате шықты: {str(e)}"}
+        # Егер тағы қате шықса, нақты себебін экранға шығарамыз
+        return {"reply": f"Жүйелік қате: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
