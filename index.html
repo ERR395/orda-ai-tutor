@@ -8,49 +8,133 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
     <style>
         :root { --orda-green: #004d33; --orda-gold: #c5a059; }
         .bg-orda { background-color: var(--orda-green); }
         .text-orda-gold { color: var(--orda-gold); }
-        .CodeMirror { height: 100%; font-size: 16px; }
+        .CodeMirror { height: 100% !important; font-size: 16px; }
+        #login-modal { transition: opacity 0.3s ease; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
 
-    <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-2xl border-4 border-orda-gold w-96 text-center">
-            <div class="bg-orda text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold border-4 border-orda-gold mb-4">O</div>
+    <div id="login-modal" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
+        <div class="bg-white p-8 rounded-2xl border-4 border-orda-gold w-96 text-center shadow-2xl">
+            <div class="bg-orda text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold border-4 border-orda-gold mb-4 shadow-lg">O</div>
             <h2 class="text-2xl font-bold mb-4 text-orda">Қош келдіңіз!</h2>
-            <input type="text" id="user-name" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-4 outline-none focus:border-orda" placeholder="Есіміңізді жазыңыз...">
+            <input type="text" id="user-name" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-4 outline-none focus:border-orda text-center" placeholder="Есіміңіз...">
             <select id="subject-select" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-6 outline-none focus:border-orda">
                 <option value="Python">Python</option>
                 <option value="HTML/CSS">HTML/CSS</option>
                 <option value="C++">C++</option>
                 <option value="JavaScript">JavaScript</option>
             </select>
-            <button onclick="startApp()" class="w-full bg-orda text-white py-3 rounded-xl font-bold hover:opacity-90">Оқуды бастау</button>
+            <button onclick="startApp()" class="w-full bg-orda text-white py-3 rounded-xl font-bold hover:bg-emerald-900 transition-all transform active:scale-95 shadow-md">Оқуды бастау</button>
         </div>
     </div>
 
     <header class="bg-orda text-white p-3 flex justify-between items-center border-b-4 border-orda-gold shadow-lg">
         <div class="flex items-center gap-3">
             <div class="bg-white text-orda font-bold w-8 h-8 rounded-full flex items-center justify-center">O</div>
-            <h1 class="text-lg font-bold">ORDA <span class="text-orda-gold" id="current-subject-title">AI</span></h1>
+            <h1 class="text-lg font-bold uppercase tracking-tight">ORDA <span class="text-orda-gold" id="current-subject-title">AI</span></h1>
         </div>
-        <div class="text-sm font-medium" id="welcome-text">Сәлем!</div>
+        <div class="text-sm font-medium border-l border-white/30 pl-3" id="welcome-text">Күте тұрыңыз...</div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
         <div class="w-1/3 flex flex-col border-r border-gray-300 bg-white">
-            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-            <div class="p-3 border-t border-gray-200 flex gap-2">
+            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50"></div>
+            <div class="p-3 border-t border-gray-200 flex gap-2 bg-white">
                 <input type="text" id="user-input" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-orda" placeholder="Сұрақ қою...">
-                <button onclick="sendMessage()" class="bg-orda text-white px-4 py-2 rounded-lg hover:opacity-90 font-bold">></button>
+                <button onclick="sendMessage()" class="bg-orda text-white px-5 py-2 rounded-lg hover:opacity-90 font-bold">></button>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-gray-200">
-            <div class="p-2 bg-gray-800 text-white text-xs flex justify-between items-center">
-                <span class="text-orda-gold font-bold italic uppercase" id="editor-label">Editor</span>
-                <button onclick="runCode()" class="bg-green-600 px-4 py-1 rounded hover:bg-green
+            <div class="p-2 bg-slate-800 text-white text-[10px] flex justify-between items-center px-4">
+                <span class="text-orda-gold font-bold tracking-widest uppercase" id="editor-label">EDITOR</span>
+                <button onclick="runCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded text-xs font-bold transition">RUN CODE</button>
+            </div>
+            <div class="flex-1 relative border-b border-slate-700">
+                <textarea id="code-editor"></textarea>
+            </div>
+            <div class="h-1/3 bg-slate-900 p-4 font-mono text-xs text-emerald-400 overflow-y-auto border-t-4 border-orda-gold">
+                <div class="text-slate-500 mb-2 border-b border-slate-800 pb-1">OUTPUT CONSOLE:</div>
+                <pre id="output" class="whitespace-pre-wrap">>>> Жүйе дайын...</pre>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        let userName = "";
+        let currentSubject = "";
+        let editor;
+
+        // CodeMirror-ды бірден жүктейміз, бірақ жасырып қоямыз
+        window.onload = () => {
+            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+                mode: "python",
+                lineNumbers: true,
+                theme: "default",
+                indentUnit: 4,
+                viewportMargin: Infinity
+            });
+        };
+
+        function startApp() {
+            userName = document.getElementById('user-name').value.trim();
+            currentSubject = document.getElementById('subject-select').value;
+            
+            if(!userName) {
+                alert("Өтініш, есіміңізді жазыңыз!");
+                return;
+            }
+
+            // Модалды жабу
+            document.getElementById('login-modal').style.display = 'none';
+            
+            // Интерфейсті жаңарту
+            document.getElementById('welcome-text').innerText = "Оқушы: " + userName;
+            document.getElementById('current-subject-title').innerText = "| " + currentSubject;
+            document.getElementById('editor-label').innerText = currentSubject + " Editor";
+
+            // Редактор режимін өзгерту
+            if(currentSubject === "HTML/CSS") editor.setOption("mode", "xml");
+            else if(currentSubject === "JavaScript") editor.setOption("mode", "javascript");
+            else if(currentSubject === "C++") editor.setOption("mode", "text/x-c++src");
+            else editor.setOption("mode", "python");
+
+            // Алғашқы хабарлама
+            appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен Орда колледжінің AI мұғалімімін. Бүгін біз <b>${currentSubject}</b> үйренеміз. Қандай сұрағың бар?`, 'bg-white border-l-4 border-orda-gold text-gray-800 shadow-sm');
+            
+            // Редакторды реттеу
+            setTimeout(() => { editor.refresh(); }, 200);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage('Сіз', text, 'bg-emerald-50 border border-emerald-100 text-emerald-900 ml-8');
+            input.value = '';
+
+            try {
+                const response = await fetch('https://orda-ai-tutor.onrender.com/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: userName, message: text, subject: currentSubject })
+                });
+                const data = await response.json();
+                appendMessage('Мұғалім', data.reply, 'bg-white border-l-4 border-orda-gold text-gray-800 shadow-sm');
+            } catch (err) {
+                appendMessage('Қате', 'Сервермен байланыс үзілді. Render оянып жатқан болуы мүмкін, 30 сек күте тұрыңыз.', 'bg-red-50 text-red-700 border border-red-200');
+            }
+        }
+
+        function appendMessage(sender, text, style) {
+            const chatBox = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `${style
