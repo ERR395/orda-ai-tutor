@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orda AI Tutor - Онлайн</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 450px; text-align: center; }
+        h1 { color: #1a73e8; font-size: 24px; }
+        #chat-box { height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 15px; margin: 15px 0; text-align: left; background: #fafafa; border-radius: 8px; font-size: 14px; line-height: 1.5; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1557b0; }
+        .user-msg { color: #1a73e8; margin-bottom: 10px; }
+        .ai-msg { color: #333; background: #eef; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
+        .error-msg { color: red; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="setup-screen">
+    <h1>Orda AI Tutor 🎓</h1>
+    <p>Сервер: <span style="color: green;">Online (Render)</span></p>
+    <input type="text" id="username" placeholder="Есіміңізді жазыңыз...">
+    <select id="subject">
+        <option value="python">Python Сабағы</option>
+        <option value="html">HTML/CSS Сабағы</option>
+        <option value="js">JavaScript Сабағы</option>
+        <option value="cpp">C++ Сабағы</option>
+    </select>
+    <button onclick="startLesson()">Оқуды бастау</button>
+</div>
+
+<div class="container" id="chat-screen" style="display:none;">
+    <h2 id="lesson-title">Сабақ</h2>
+    <div id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Сұрақ қойыңыз...">
+    <button onclick="sendMessage()">Жіберу</button>
+    <button onclick="location.reload()" style="background:#666;">Шығу</button>
+</div>
+
+<script>
+    // СЕНІҢ RENDER-ДЕГІ СЕРВЕРІҢНІҢ НАҚТЫ СІЛТЕМЕСІ
+    const SERVER_URL = "https://orda-ai-tutor.onrender.com";
+
+    let currentUsername = "";
+    let currentSubject = "";
+
+    async function startLesson() {
+        const userField = document.getElementById('username');
+        const subjectField = document.getElementById('subject');
+
+        if (!userField.value) return alert("Атыңызды жазыңыз!");
+
+        currentUsername = userField.value;
+        currentSubject = subjectField.value;
+
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('chat-screen').style.display = 'block';
+        document.getElementById('lesson-title').innerText = `${currentSubject.toUpperCase()} Сабағы`;
+
+        addMessage("Жүйе", "Серверге қосылуда...", "ai-msg");
+
+        try {
+            // Сабақты бастау сұранысы
+            const res = await fetch(`${SERVER_URL}/study/${currentUsername}?subject=${currentSubject}`);
+            const data = await res.json();
+            
+            document.getElementById('chat-box').innerHTML = ""; 
+            addMessage("Мұғалім", data.message, "ai-msg");
+        } catch (err) {
+            addMessage("Қате", "Сервер жауап бермеді. 30 секунд күтіп, бетті жаңартыңыз.", "error-msg");
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const message = input.value;
+        if (!message) return;
+
+        addMessage("Сіз", message, "user-msg");
+        input.value = "";
+
+        try {
+            // Чат сұранысы
+            const res = await fetch(`${SERVER_URL}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: currentUsername,
+                    message: message,
+                    subject: currentSubject
+                })
+            });
+            const data = await res.json();
+            addMessage("Мұғалім", data.reply, "ai-msg");
+        } catch (err) {
+            addMessage("Қате", "Хабарлама жіберу мүмкін болмады.", "error-msg");
+        }
+    }
+
+    function addMessage(sender, text, className) {
+        const box = document.getElementById('chat-box');
+        const msg = document.createElement('div');
+        msg.className = className;
+        msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        box.appendChild(msg);
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
