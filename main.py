@@ -4,16 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 
-# API Кілтін баптау
+# API Кілтін алу
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# СЕНІҢ ҚАТЕҢДІ ТҮЗЕТЕТІН ЖОЛ: Модельді тізімнен автоматты түрде таңдау
-# Егер flash-1.5 істемесе, ол автоматты түрде gemini-pro-ға ауысады
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    model = genai.GenerativeModel('gemini-pro')
+# ПРОБЛЕМАНЫ ШЕШЕТІН ЖОЛ: 
+# Модель атауын нақты v1 нұсқасы үшін gemini-1.5-flash деп жазамыз
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = FastAPI()
 
@@ -32,17 +29,22 @@ class ChatMessage(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Server is up and running"}
+    return {"status": "Server is working"}
 
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        # Сұранысты жіберу (Қазақша жауап беруді талап ету)
-        response = model.generate_content(f"Сен {msg.subject} мұғалімісің. Оқушы аты: {msg.username}. Сұраққа қазақша жауап бер: {msg.message}")
+        # Сұранысты жіберу
+        response = model.generate_content(f"Сен {msg.subject} мұғалімісің. Оқушы аты: {msg.username}. Жауапты қазақша бер: {msg.message}")
         return {"reply": response.text}
     except Exception as e:
-        # Егер тағы қате шықса, нақты себебін экранға шығарамыз
-        return {"reply": f"Жүйелік қате: {str(e)}"}
+        # Егер 1.5 нұсқасы әлі де істемесе, автоматты түрде gemini-pro-ға ауысу
+        try:
+            old_model = genai.GenerativeModel('gemini-pro')
+            response = old_model.generate_content(f"Сен {msg.subject} мұғалімісің. Сұрақ: {msg.message}")
+            return {"reply": response.text}
+        except Exception as e2:
+            return {"reply": f"Қате: {str(e2)}"}
 
 if __name__ == "__main__":
     import uvicorn
