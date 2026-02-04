@@ -4,19 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 
-# API Кілтін Render-ден алу
+# API Кілті
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# Модельді баптау (Ең тұрақты нұсқасы)
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    model = genai.GenerativeModel('gemini-pro')
+# Модель
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = FastAPI()
 
-# Браузермен байланыс орнату (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,29 +28,25 @@ class ChatMessage(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Orda AI Server is active"}
+    return {"status": "Orda Multi-Subject Server is active"}
 
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        # AI-ға нақты нұсқаулық: Қысқа жаз және қазақша жауап бер
+        # Кез келген пәнге жауап беретін нұсқаулық
         instruction = (
-            f"Сен 'Orda' жоғары колледжінің мұғалімісің. "
-            f"Оқушының аты: {msg.username}. Пән: {msg.subject}. "
-            f"Қазақ тілінде жауап бер. Жауабың өте қысқа болсын (2-3 сөйлемнен аспасын)."
+            f"Сен 'Orda' колледжінің {msg.subject} пәнінен мұғалімісің. "
+            f"Оқушының аты: {msg.username}. "
+            f"Қазақша жауап бер. Жауабың өте қысқа әрі нұсқа болсын (максимум 3 сөйлем)."
         )
         
         full_prompt = f"{instruction}\nСұрақ: {msg.message}"
-        
         response = model.generate_content(full_prompt)
         return {"reply": response.text}
-    
     except Exception as e:
-        # Қате шықса, оны пайдаланушыға түсінікті етіп көрсету
-        return {"reply": f"Кешіріңіз, қате шықты. API кілтін немесе интернетті тексеріңіз. Себебі: {str(e)}"}
+        return {"reply": f"Қате: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
-    # Render үшін портты баптау
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
