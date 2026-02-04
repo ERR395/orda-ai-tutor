@@ -8,9 +8,6 @@ import google.generativeai as genai
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# Модель
-model = genai.GenerativeModel('gemini-1.5-flash')
-
 app = FastAPI()
 
 app.add_middleware(
@@ -26,25 +23,22 @@ class ChatMessage(BaseModel):
     message: str
     subject: str
 
-@app.get("/")
-def home():
-    return {"status": "Orda Multi-Subject Server is active"}
-
 @app.post("/chat")
 async def chat(msg: ChatMessage):
     try:
-        # Кез келген пәнге жауап беретін нұсқаулық
-        instruction = (
-            f"Сен 'Orda' колледжінің {msg.subject} пәнінен мұғалімісің. "
-            f"Оқушының аты: {msg.username}. "
-            f"Қазақша жауап бер. Жауабың өте қысқа әрі нұсқа болсын (максимум 3 сөйлем)."
-        )
+        # Қолжетімді модельді автоматты табу
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        # Тізімдегі бірінші модельді аламыз (flash немесе pro)
+        target_model = available_models[0] if available_models else "models/gemini-pro"
         
-        full_prompt = f"{instruction}\nСұрақ: {msg.message}"
-        response = model.generate_content(full_prompt)
+        model = genai.GenerativeModel(target_model)
+        
+        instruction = f"Сен Orda колледжінің {msg.subject} мұғалімісің. Оқушы: {msg.username}. Қазақша, өте қысқа жауап бер."
+        response = model.generate_content(f"{instruction}\nСұрақ: {msg.message}")
+        
         return {"reply": response.text}
     except Exception as e:
-        return {"reply": f"Қате: {str(e)}"}
+        return {"reply": f"Жүйелік қате: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
