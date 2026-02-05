@@ -9,17 +9,23 @@
         :root { --orda-green: #004d33; --orda-gold: #c5a059; }
         .bg-orda { background-color: var(--orda-green); }
         .text-orda-gold { color: var(--orda-gold); }
-        .border-orda-gold { border-color: var(--orda-gold); }
-        #main-app { display: none; } /* Басында жасырулы */
+        #main-app { display: none; }
+        /* Консоль мен чаттың скроллын әдемілеу */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--orda-gold); border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-900 h-screen flex flex-col font-sans overflow-hidden text-slate-900">
 
     <div id="login-modal" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
         <div class="bg-white p-8 rounded-2xl border-4 border-orda-gold w-96 text-center shadow-2xl">
+            
             <div class="mb-6 flex justify-center">
-                <div class="w-24 h-24 bg-orda rounded-xl flex items-center justify-center border-2 border-orda-gold p-2 shadow-inner">
-                    <img src="https://github.com/ERR395/orda-ai-tutor/raw/main/orda_logo.png" alt="ORDA" class="max-w-full max-h-full object-contain" onerror="this.outerHTML='<span class=\"text-white font-bold text-3xl\">ORDA</span>'">
+                <div class="w-24 h-24 bg-white rounded-xl flex items-center justify-center border-2 border-orda-gold p-1 shadow-lg overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/ERR395/orda-ai-tutor/main/orda_logo.png" 
+                         alt="ORDA Logo" 
+                         class="max-w-full max-h-full object-contain"
+                         onerror="this.src='https://via.placeholder.com/150?text=ORDA'">
                 </div>
             </div>
             
@@ -45,15 +51,15 @@
     <div id="main-app" class="h-full flex flex-col bg-gray-100">
         <header class="bg-orda text-white p-3 flex justify-between items-center border-b-4 border-orda-gold">
             <div class="flex items-center gap-3">
-                <img src="https://github.com/ERR395/orda-ai-tutor/raw/main/orda_logo.png" class="h-8 w-8 object-contain bg-white rounded-sm p-0.5" onerror="this.style.display='none'">
+                <img src="https://raw.githubusercontent.com/ERR395/orda-ai-tutor/main/orda_logo.png" class="h-8 w-8 object-contain bg-white rounded-sm p-0.5" onerror="this.style.display='none'">
                 <h1 class="text-lg font-bold tracking-tight text-white uppercase">ORDA <span class="text-orda-gold" id="current-subject-title">AI</span></h1>
             </div>
             <div class="text-xs font-bold bg-black/20 px-3 py-1 rounded-full border border-white/20" id="welcome-text">...</div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <div class="w-1/3 flex flex-col bg-white border-r border-gray-300">
-                <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+            <div class="w-1/3 flex flex-col bg-white border-r border-gray-300 shadow-inner">
+                <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 text-sm"></div>
                 <div class="p-3 border-t border-gray-200 bg-white flex gap-2">
                     <input type="text" id="user-input" class="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-orda" placeholder="Сұрақ қойыңыз...">
                     <button onclick="sendMessage()" class="bg-orda text-white px-6 py-2 rounded-xl font-bold hover:opacity-90">Жіберу</button>
@@ -68,9 +74,9 @@
                 <div class="flex-1 p-2">
                     <textarea id="code-area" class="w-full h-full bg-slate-900 text-emerald-400 font-mono p-4 rounded-lg border border-slate-700 outline-none resize-none" placeholder="Кодты осында жазыңыз..."></textarea>
                 </div>
-                <div class="h-1/3 bg-black p-4 font-mono text-xs text-green-500 overflow-y-auto border-t-2 border-orda-gold">
-                    <div class="text-slate-500 text-[10px] mb-2 font-bold">CONSOLE OUTPUT:</div>
-                    <pre id="output">>>> Жүйе іске қосылды...</pre>
+                <div class="h-1/3 bg-black p-4 font-mono text-xs text-green-500 overflow-y-auto border-t-2 border-orda-gold shadow-2xl">
+                    <div class="text-slate-500 text-[10px] mb-2 font-bold uppercase tracking-tighter">Console Output:</div>
+                    <pre id="output">>>> Жүйе дайын...</pre>
                 </div>
             </div>
         </div>
@@ -80,6 +86,7 @@
         let userName = "";
         let currentSubject = "";
 
+        // БАТЫРМАНЫ БАСҚАНДА ІСКЕ ҚОСЫЛАТЫН ФУНКЦИЯ
         function startApp() {
             userName = document.getElementById('user-name').value.trim();
             currentSubject = document.getElementById('subject-select').value;
@@ -89,7 +96,7 @@
                 return;
             }
 
-            // Модалды жабу, қолданбаны ашу
+            // ТЕРЕЗЕНІ АУЫСТЫРУ
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
             
@@ -97,9 +104,11 @@
             document.getElementById('current-subject-title').innerText = "| " + currentSubject;
             document.getElementById('editor-label').innerText = currentSubject + " Editor";
 
-            appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен Орда колледжінің AI мұғалімімін. Бүгін біз <b>${currentSubject}</b> үйренеміз. Қандай сұрағың бар?`, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-md');
+            // АЛҒАШҚЫ СӘЛЕМДЕМЕ
+            appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен Орда колледжінің AI мұғалімімін. Бүгін біз <b>${currentSubject}</b> үйренеміз. Сұрағың бар ма?`, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-sm');
         }
 
+        // ХАБАРЛАМА ЖІБЕРУ
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
@@ -117,25 +126,27 @@
                 const data = await response.json();
                 appendMessage('Мұғалім', data.reply, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-md');
             } catch (err) {
-                appendMessage('Қате', 'Серверге қосылу мүмкін болмады.', 'bg-red-100 text-red-800 border-l-8 border-red-500');
+                appendMessage('Қате', 'Серверге қосылу мүмкін болмады. Біраз күтіп қайта көріңіз.', 'bg-red-100 text-red-800 border-l-8 border-red-500');
             }
         }
 
         function appendMessage(sender, text, style) {
             const chatBox = document.getElementById('chat-box');
             const div = document.createElement('div');
-            div.className = `${style} p-4 rounded-xl text-sm transition-all duration-300`;
+            div.className = `${style} p-4 rounded-xl transition-all duration-300`;
             div.innerHTML = `<span class="text-[9px] uppercase font-black block mb-1 opacity-40">${sender}</span> ${text}`;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // КОДТЫ СИМУЛЯЦИЯЛАУ
         function runCode() {
             const code = document.getElementById('code-area').value;
             const output = document.getElementById('output');
             output.innerText = `>>> ${currentSubject} орындалуда...\n\n${code}\n\n>>> Сәтті аяқталды!`;
         }
 
+        // ENTER БАСҚАНДА ЖІБЕРУ
         document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
     </script>
 </body>
