@@ -18,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Мұнда 'current_code' деген жаңа жол қостық
 class ChatMessage(BaseModel):
     username: str
     message: str
@@ -34,15 +33,18 @@ async def chat(msg: ChatMessage):
         
         model = genai.GenerativeModel(target_model)
         
-        # Нұсқаулықты құрастыру
-        instruction = f"Сен Orda колледжінің {msg.subject} мұғалімісің. Оқушы: {msg.username}. Қазақша жауап бер."
+        # --- МАҢЫЗДЫ ӨЗГЕРІС: ҚЫСҚА ЖАУАП СҰРАУ ---
+        instruction = (
+            f"Сен Orda колледжінің {msg.subject} мұғалімісің. Оқушы: {msg.username}. "
+            "Жауабың өте қысқа, нақты және түсінікті болсын (максимум 2-3 сөйлем). "
+            "Ұзын лекция оқыма. Тек сұраққа жауап бер."
+        )
         
-        # Егер оқушының редакторында код болса, оны AI-ға көрсетеміз
         context = ""
         if msg.current_code and len(msg.current_code) > 0:
-            context = f"\n\n[Оқушының экранындағы қазіргі код]:\n```\n{msg.current_code}\n```\nОсы кодқа қатысты сұрақ болуы мүмкін.\n"
+            context = f"\n\n[Оқушының коды]:\n```\n{msg.current_code}\n```\n"
         
-        full_prompt = f"{instruction}{context}\nОқушының сұрағы: {msg.message}"
+        full_prompt = f"{instruction}{context}\nОқушы: {msg.message}"
         
         response = model.generate_content(full_prompt)
         return {"reply": response.text}
@@ -53,4 +55,3 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
