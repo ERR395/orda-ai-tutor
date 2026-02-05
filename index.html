@@ -10,37 +10,33 @@
         .bg-orda { background-color: var(--orda-green); }
         .text-orda-gold { color: var(--orda-gold); }
         #main-app { display: none; }
-        /* Консоль мен чаттың скроллын әдемілеу */
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--orda-gold); border-radius: 10px; }
+        /* Консольдегі мәтін әдемі шығу үшін */
+        pre { white-space: pre-wrap; word-wrap: break-word; }
     </style>
 </head>
 <body class="bg-slate-900 h-screen flex flex-col font-sans overflow-hidden text-slate-900">
 
     <div id="login-modal" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
         <div class="bg-white p-8 rounded-2xl border-4 border-orda-gold w-96 text-center shadow-2xl">
-            
             <div class="mb-6 flex justify-center">
                 <div class="w-24 h-24 bg-white rounded-xl flex items-center justify-center border-2 border-orda-gold p-1 shadow-lg overflow-hidden">
                     <img src="https://raw.githubusercontent.com/ERR395/orda-ai-tutor/main/orda_logo.png" 
-                         alt="ORDA Logo" 
+                         alt="ORDA" 
                          class="max-w-full max-h-full object-contain"
                          onerror="this.src='https://via.placeholder.com/150?text=ORDA'">
                 </div>
             </div>
-            
             <h2 class="text-2xl font-bold mb-6 text-orda">Қош келдіңіз!</h2>
-            
             <div class="space-y-4">
                 <input type="text" id="user-name" class="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-orda text-center font-semibold" placeholder="Есіміңізді жазыңыз">
-                
                 <select id="subject-select" class="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-orda font-medium bg-gray-50">
                     <option value="Python">Python Бағдарламалау</option>
                     <option value="HTML/CSS">HTML/CSS Веб-дизайн</option>
                     <option value="C++">C++ Тілі</option>
                     <option value="JavaScript">JavaScript Негіздері</option>
                 </select>
-                
                 <button onclick="startApp()" class="w-full bg-orda text-white py-4 rounded-xl font-bold text-lg hover:bg-emerald-900 transition-all shadow-lg active:scale-95">
                     Оқуды бастау
                 </button>
@@ -69,14 +65,14 @@
             <div class="flex-1 flex flex-col bg-slate-800">
                 <div class="p-2 bg-slate-900 text-[10px] flex justify-between items-center px-4">
                     <span class="text-orda-gold font-bold tracking-widest uppercase italic" id="editor-label">EDITOR</span>
-                    <button onclick="runCode()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1 rounded text-[10px] font-black transition uppercase">Run Code</button>
+                    <button onclick="runCode()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1 rounded text-[10px] font-black transition uppercase animate-pulse">Run / Check Code</button>
                 </div>
                 <div class="flex-1 p-2">
                     <textarea id="code-area" class="w-full h-full bg-slate-900 text-emerald-400 font-mono p-4 rounded-lg border border-slate-700 outline-none resize-none" placeholder="Кодты осында жазыңыз..."></textarea>
                 </div>
                 <div class="h-1/3 bg-black p-4 font-mono text-xs text-green-500 overflow-y-auto border-t-2 border-orda-gold shadow-2xl">
                     <div class="text-slate-500 text-[10px] mb-2 font-bold uppercase tracking-tighter">Console Output:</div>
-                    <pre id="output">>>> Жүйе дайын...</pre>
+                    <pre id="output">>>> Жүйе дайын. Код жазып, "RUN" батырмасын басыңыз...</pre>
                 </div>
             </div>
         </div>
@@ -86,17 +82,12 @@
         let userName = "";
         let currentSubject = "";
 
-        // БАТЫРМАНЫ БАСҚАНДА ІСКЕ ҚОСЫЛАТЫН ФУНКЦИЯ
         function startApp() {
             userName = document.getElementById('user-name').value.trim();
             currentSubject = document.getElementById('subject-select').value;
             
-            if(!userName) {
-                alert("Өтініш, есіміңізді жазыңыз!");
-                return;
-            }
+            if(!userName) { alert("Есіміңізді жазыңыз!"); return; }
 
-            // ТЕРЕЗЕНІ АУЫСТЫРУ
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
             
@@ -104,11 +95,9 @@
             document.getElementById('current-subject-title').innerText = "| " + currentSubject;
             document.getElementById('editor-label').innerText = currentSubject + " Editor";
 
-            // АЛҒАШҚЫ СӘЛЕМДЕМЕ
             appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен Орда колледжінің AI мұғалімімін. Бүгін біз <b>${currentSubject}</b> үйренеміз. Сұрағың бар ма?`, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-sm');
         }
 
-        // ХАБАРЛАМА ЖІБЕРУ
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
@@ -126,7 +115,7 @@
                 const data = await response.json();
                 appendMessage('Мұғалім', data.reply, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-md');
             } catch (err) {
-                appendMessage('Қате', 'Серверге қосылу мүмкін болмады. Біраз күтіп қайта көріңіз.', 'bg-red-100 text-red-800 border-l-8 border-red-500');
+                appendMessage('Қате', 'Сервер жауап бермеді.', 'bg-red-100 text-red-800');
             }
         }
 
@@ -139,14 +128,45 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // КОДТЫ СИМУЛЯЦИЯЛАУ
-        function runCode() {
+        // --- МАҢЫЗДЫ: БҰЛ ФУНКЦИЯ ЕНДІ AI АРҚЫЛЫ ТЕКСЕРЕДІ ---
+        async function runCode() {
             const code = document.getElementById('code-area').value;
             const output = document.getElementById('output');
-            output.innerText = `>>> ${currentSubject} орындалуда...\n\n${code}\n\n>>> Сәтті аяқталды!`;
+            
+            if (!code.trim()) {
+                output.innerText = ">>> Код жазылмаған!";
+                return;
+            }
+
+            output.innerText = ">>> Код тексерілуде... Күте тұрыңыз...";
+            output.className = "text-yellow-400"; // Күту түсі
+
+            try {
+                // AI-ға арнайы сұраныс жібереміз
+                const checkPrompt = `Мына кодты тексеріп берші. Егер қате болса, қатесін түсіндір. Егер дұрыс болса, нәтижесі қандай болатынын көрсет.\nКод:\n${code}`;
+
+                const response = await fetch('https://orda-ai-tutor.onrender.com/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: userName, 
+                        message: checkPrompt, 
+                        subject: currentSubject 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Нәтижені консольге шығарамыз
+                output.innerText = ">>> НӘТИЖЕ:\n" + data.reply;
+                output.className = "text-green-400"; // Нәтиже түсі
+
+            } catch (err) {
+                output.innerText = ">>> Қате: Сервермен байланыс жоқ.";
+                output.className = "text-red-500";
+            }
         }
 
-        // ENTER БАСҚАНДА ЖІБЕРУ
         document.getElementById('user-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
     </script>
 </body>
