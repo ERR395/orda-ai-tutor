@@ -67,7 +67,7 @@
                     <textarea id="code-area" class="w-full h-full bg-slate-900 text-emerald-400 font-mono p-4 rounded-lg border border-slate-700 outline-none resize-none" placeholder="Кодты осында жазыңыз..."></textarea>
                 </div>
                 <div class="h-1/3 bg-black p-4 font-mono text-xs text-green-500 overflow-y-auto border-t-2 border-orda-gold shadow-2xl">
-                    <div class="text-slate-500 text-[10px] mb-2 font-bold uppercase tracking-tighter">Console Output:</div>
+                    <div class="text-slate-500 text-[10px] mb-2 font-bold uppercase tracking-tighter">System Status:</div>
                     <pre id="output">>>> Жүйе дайын...</pre>
                 </div>
             </div>
@@ -87,14 +87,14 @@
             document.getElementById('welcome-text').innerText = "Оқушы: " + userName;
             document.getElementById('current-subject-title').innerText = "| " + currentSubject;
             document.getElementById('editor-label').innerText = currentSubject + " Editor";
-            appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен Орда колледжінің AI мұғалімімін. Бүгін біз <b>${currentSubject}</b> үйренеміз. Сұрағың бар ма?`, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-sm');
+            appendMessage('Мұғалім', `Сәлем, <b>${userName}</b>! Мен AI мұғаліммін. Бүгін <b>${currentSubject}</b> үйренеміз. Сұрағың бар ма?`, 'bg-white border-l-8 border-orda-gold text-slate-800 shadow-sm');
         }
 
         async function sendMessage() {
             const input = document.getElementById('user-input');
-            const codeInput = document.getElementById('code-area'); // Кодты алу
+            const codeInput = document.getElementById('code-area');
             const text = input.value.trim();
-            const currentCode = codeInput.value; // Кодтың мәтіні
+            const currentCode = codeInput.value;
 
             if (!text) return;
 
@@ -102,7 +102,6 @@
             input.value = '';
 
             try {
-                // Біз енді хабарламамен бірге кодты да жібереміз (current_code)
                 const response = await fetch('https://orda-ai-tutor.onrender.com/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -129,12 +128,18 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // --- ЖАҢАРТЫЛҒАН ФУНКЦИЯ: ҚАТЕ ЕНДІ ЧАТҚА ШЫҒАДЫ ---
         async function runCode() {
             const code = document.getElementById('code-area').value;
             const output = document.getElementById('output');
             
-            if (!code.trim()) { output.innerText = ">>> Код жазылмаған!"; return; }
-            output.innerText = ">>> Тексерілуде..."; output.className = "text-yellow-400";
+            if (!code.trim()) { 
+                output.innerText = ">>> Код жазылмаған!"; 
+                return; 
+            }
+            
+            output.innerText = ">>> AI тексеріп жатыр..."; 
+            output.className = "text-yellow-400";
 
             try {
                 const response = await fetch('https://orda-ai-tutor.onrender.com/chat', {
@@ -142,16 +147,23 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         username: userName, 
-                        message: "Мына кодты тексеріп, нәтижесін немесе қатесін айт:\n" + code, 
+                        message: "Мына кодты тексеріп берші. Қысқаша түсіндір.", 
                         subject: currentSubject,
                         current_code: code 
                     })
                 });
                 const data = await response.json();
-                output.innerText = ">>> НӘТИЖЕ:\n" + data.reply;
+                
+                // 1. Консольге тек қысқа хабарлама шығады
+                output.innerText = ">>> Тексеру аяқталды. Жауап чатта.";
                 output.className = "text-green-400";
+
+                // 2. Толық түсіндірме ЧАТҚА келеді
+                appendMessage('Мұғалім', `<b>КОДТЫ ТЕКСЕРУ НӘТИЖЕСІ:</b><br>${data.reply}`, 'bg-white border-l-8 border-blue-500 text-slate-800 shadow-md');
+
             } catch (err) {
-                output.innerText = ">>> Қате!"; output.className = "text-red-500";
+                output.innerText = ">>> Қате!"; 
+                output.className = "text-red-500";
             }
         }
 
